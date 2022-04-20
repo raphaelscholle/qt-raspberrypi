@@ -38,7 +38,10 @@ VERSION=$(git describe)
 
 rm ${PACKAGE_NAME}_${VERSION//v}_${PACKAGE_ARCH}.deb > /dev/null 2>&1
 
-fpm -a ${PACKAGE_ARCH} -s dir -t deb -n ${PACKAGE_NAME} -v ${VERSION//v} -C ${PKGDIR} \
+apt -y install wget xz-utils 
+
+
+fpm -a armhf -s dir -t deb -n ${PACKAGE_NAME} -v ${VERSION//v} -C ${PKGDIR} \
   $PLATFORM_CONFIGS \
   -p ${PACKAGE_NAME}_VERSION_ARCH.deb \
   --provides openhd-qt \
@@ -85,6 +88,6 @@ if [[ $? -eq 0 ]]; then
     echo "Pushing package to OpenHD repository"
     cloudsmith push deb openhd/openhd-2-1/${OS}/${DISTRO} ${PACKAGE_NAME}_${VERSION//v}_${PACKAGE_ARCH}.deb
 else
-    echo "Pushing package to OpenHD testing repository"
-    cloudsmith push deb openhd/openhd-2-1-testing/${OS}/${DISTRO} ${PACKAGE_NAME}_${VERSION//v}_${PACKAGE_ARCH}.deb
+    echo "Pushing package to OpenHD Milestone repository"
+    cloudsmith push deb openhd/openhd-2-1-alpha/${OS}/${DISTRO} ${PACKAGE_NAME}_${VERSION//v}_${PACKAGE_ARCH}.deb
 fi

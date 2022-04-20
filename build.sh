@@ -1,3 +1,4 @@
+#!/bin/bash
 
 QT_MAJOR_VERSION=5.15
 QT_MINOR_VERSION=0
@@ -12,8 +13,8 @@ fi
 if [ "$TYPE" == "pi-stretch" ]; then
     PLATFORM="linux-rpi-g++"
     SSL_ARGS="-no-openssl"
-elif [ "$TYPE" == "pi-buster" ]; then
-    PLATFORM="linux-rpi-vc4-g++"
+elif [ "$TYPE" == "pi-bullseye" ]; then
+    PLATFORM="linux-rpi4-v3d-g++"
     SSL_ARGS="-openssl"
 elif [ "$TYPE" == "jetson-nano" ]; then
     PLATFORM="linux-jetson-nano-g++"
@@ -45,7 +46,7 @@ fi
 
 if [ ! -f qt-everywhere-src-${QT_MAJOR_VERSION}.${QT_MINOR_VERSION}.tar.xz ]; then
         echo "Download Qt ${QT_MAJOR_VERSION}.${QT_MINOR_VERSION}"
-        wget http://download.qt.io/official_releases/qt/${QT_MAJOR_VERSION}/${QT_MAJOR_VERSION}.${QT_MINOR_VERSION}/single/qt-everywhere-src-${QT_MAJOR_VERSION}.${QT_MINOR_VERSION}.tar.xz
+        wget -q --show-progress --progress=bar:force:noscroll http://download.qt.io/official_releases/qt/${QT_MAJOR_VERSION}/${QT_MAJOR_VERSION}.${QT_MINOR_VERSION}/single/qt-everywhere-src-${QT_MAJOR_VERSION}.${QT_MINOR_VERSION}.tar.xz
 fi
 
 echo "Building Qt for ${TYPE} (${PLATFORM})"
@@ -55,25 +56,27 @@ if [ -d qt-everywhere-src-${QT_MAJOR_VERSION}.${QT_MINOR_VERSION} ]; then
         rm -rf qt-everywhere-src-${QT_MAJOR_VERSION}.${QT_MINOR_VERSION}
 fi
 
-tar xvf qt-everywhere-src-${QT_MAJOR_VERSION}.${QT_MINOR_VERSION}.tar.xz || exit 1
+tar xf qt-everywhere-src-${QT_MAJOR_VERSION}.${QT_MINOR_VERSION}.tar.xz || exit 1
 
 if [ ! -f qt-raspberrypi-configuration ]; then
-    git clone https://github.com/OpenHD/qt-raspberrypi-configuration.git
+    git clone https://github.com/OpenHD/qt-raspberrypi-configuration
 fi
+
+apt -y install wget xz-utils 
 
 pushd qt-raspberrypi-configuration
 make install DESTDIR=../qt-everywhere-src-${QT_MAJOR_VERSION}.${QT_MINOR_VERSION}
 popd
 
+
 apt-get update
 
-apt-get install build-essential \
+apt -y install build-essential \
 flite \
 flite1-dev \
 libasound2-dev \
 libdbus-1-dev \
 libdouble-conversion-dev \
-libdouble-conversion1 \
 libdrm-dev \
 libegl1-mesa-dev \
 libfontconfig1-dev \
@@ -87,7 +90,6 @@ libjpeg-dev \
 libnss3-dev \
 libpng-dev \
 libpulse-dev \
-libicu63 \
 libspeechd-dev  \
 libsqlite3-dev \
 libssl-dev \
@@ -106,7 +108,7 @@ mkdir -p build
 
 pushd build
 
-../qt-everywhere-src-${QT_MAJOR_VERSION}.${QT_MINOR_VERSION}/configure -platform ${PLATFORM} \
+../qt-everywhere-src-${QT_MAJOR_VERSION}.${QT_MINOR_VERSION}/configure -v -platform ${PLATFORM} \
 -v \
 -opengl es2 -eglfs \
 -no-gtk \
