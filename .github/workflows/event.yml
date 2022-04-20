@@ -1,4 +1,4 @@
-name: build QT
+name: Image build on event
 
 on:
   push:
@@ -21,29 +21,31 @@ jobs:
         TARGET: [pi-buster, pi-bullseye] # <-- Add targets here!
 
     steps:
-    - name: fetch
-  image: arm32v6/alpine:3.12
-  commands:
- - name: build
-  image: plugins/docker
-  environment:
-    CLOUDSMITH_API_KEY:
-      from_secret: CLOUDSMITH_API_KEY
-  settings:
-      repo: openhd/qopenhd
-      dry_run: true
-      username:
-        from_secret: docker_openhd_username
-      password:
-        from_secret: docker_openhd_password
-      dockerfile: Dockerfile-armhf-raspbian-bullseye
-      build_args_from_env:
-        - CLOUDSMITH_API_KEY
+    - name: Setup env
+      run: |
+        echo "DT=$(date +'%Y-%m-%d_%H%M')" >> $GITHUB_ENV
+        echo "BRANCH=${GITHUB_REF##*/}" >> $GITHUB_ENV
+    
+    
+    ### ONLY THIS RELEVANT FOR BUILDING ###
+    - uses: actions/checkout@v2
+    - name: update
+      run: sudo apt-get update
+    - name: dep
+      run: sudo apt-get install unzip curl git qemu qemu-user-static binfmt-support
+    - name: configure
+      run: sudo ./build.sh ${{ matrix.TARGET }} ${{ matrix.TESTING }}
+    ########################################
 
-    - name: Pack file
+
+    - name: Compose release filename
+      # https://stackoverflow.com/questions/58033366/how-to-get-current-branch-within-github-actions
+      run: echo "artifact_name=OpenHD-image-${{ matrix.TARGET }}-${{ matrix.TESTING }}-${{ matrix.DISTRO }}-${GITHUB_REF##*/}-${{ env.DT }}" >> $GITHUB_ENV
+        
+    - name: Pack image for ${{ matrix.TARGET }} ${{ matrix.TESTING }}
       uses: 'actions/upload-artifact@v2'
       with:
         name: "${{ env.artifact_name }}"
         path: |
-          ./deploy/*
+          ./deploy/*.img
           if-no-files-found: error
