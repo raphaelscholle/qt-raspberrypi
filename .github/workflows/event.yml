@@ -24,10 +24,7 @@ jobs:
     - name: fetch
   image: arm32v6/alpine:3.12
   commands:
-  - apk add git
-  - git fetch --tags 
-  - git submodule update --init --recursive --remote 
-- name: build
+ - name: build
   image: plugins/docker
   environment:
     CLOUDSMITH_API_KEY:
