@@ -1,0 +1,20 @@
+# action.yml
+on:
+  push:
+        TARGET: [pi-bullseye] # <-- Add targets here!
+name: 'run docker'
+description: 'build qt-raspberrypi bullseye'
+inputs:
+  who-to-greet:  # id of input
+    description: 'Who to greet'
+    required: true
+    default: 'World'
+outputs:
+  time: # id of output
+    description: 'The time we greeted you'
+runs:
+  runs-on: self-hosted
+  using: 'docker'
+  image: 'Dockerfile-armhf-raspbian-bullseye'
+  args:
+    - ${{ inputs.who-to-greet }}
